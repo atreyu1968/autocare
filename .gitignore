@@ -1,0 +1,14 @@
+.env
+.env.*
+!.env.example
+node_modules/
+.next/
+dist/
+coverage/
+backups/
+data/postgres/
+data/redis/
+data/uploads/*
+!data/uploads/.gitkeep
+.DS_Store
+*.log

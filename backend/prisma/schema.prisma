@@ -1,0 +1,231 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  OWNER
+  MECHANIC
+  ADMIN
+}
+
+enum FuelType {
+  PETROL
+  DIESEL
+  HYBRID
+  PHEV
+  ELECTRIC
+  LPG
+}
+
+enum TimingSystem {
+  CHAIN
+  BELT
+  GEARS
+  NONE
+}
+
+enum CriticalLevel {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum ChecklistType {
+  REPLACE
+  INSPECT
+  CHECK
+  CLEAN
+  ADDITIVE
+}
+
+enum VehicleSystem {
+  ENGINE
+  LUBRICATION
+  COOLING
+  INTAKE
+  FUEL
+  IGNITION
+  EMISSIONS
+  TURBO
+  TRANSMISSION
+  BRAKES
+  SUSPENSION
+  STEERING
+  ELECTRICAL
+  HVAC
+  BODY
+  TYRES
+}
+
+model User {
+  id           String   @id @default(uuid()) @db.Uuid
+  email        String   @unique
+  passwordHash String
+  name         String?
+  role         UserRole @default(OWNER)
+  vehicles     Vehicle[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Manufacturer {
+  id        String         @id @default(uuid()) @db.Uuid
+  name      String         @unique
+  models    VehicleModel[]
+  createdAt DateTime       @default(now())
+}
+
+model VehicleModel {
+  id             String              @id @default(uuid()) @db.Uuid
+  manufacturerId String              @db.Uuid
+  name           String
+  manufacturer   Manufacturer        @relation(fields: [manufacturerId], references: [id], onDelete: Cascade)
+  generations    VehicleGeneration[]
+  @@unique([manufacturerId, name])
+}
+
+model VehicleGeneration {
+  id             String           @id @default(uuid()) @db.Uuid
+  vehicleModelId String           @db.Uuid
+  code           String
+  name           String?
+  startYear      Int?
+  endYear        Int?
+  vehicleModel   VehicleModel     @relation(fields: [vehicleModelId], references: [id], onDelete: Cascade)
+  engines        EngineTemplate[]
+  @@unique([vehicleModelId, code])
+}
+
+model EngineTemplate {
+  id                     String                       @id @default(uuid()) @db.Uuid
+  generationId           String                       @db.Uuid
+  code                   String
+  commercialName         String
+  fuelType               FuelType
+  displacementCc         Int?
+  powerKw                Int?
+  powerHp                Int?
+  torqueNm               Int?
+  turbo                  Boolean                      @default(false)
+  dpf                    Boolean                      @default(false)
+  timingSystem           TimingSystem?
+  oilSpecification       String?
+  oilCapacityL           Float?
+  compressionStandardBar Float?
+  compressionMinimumBar  Float?
+  compressionMaxVariance Float?
+  environmentalBadge     String?
+  generation             VehicleGeneration            @relation(fields: [generationId], references: [id], onDelete: Cascade)
+  rules                  MaintenanceRuleTemplate[]
+  packages               MaintenancePackageTemplate[]
+  vehicles               Vehicle[]
+  @@unique([generationId, code])
+}
+
+model MaintenanceRuleTemplate {
+  id                 String                   @id @default(uuid()) @db.Uuid
+  engineId           String                   @db.Uuid
+  code               String
+  name               String
+  system             VehicleSystem
+  triggerKm          Int?
+  triggerMonths      Int?
+  criticalLevel      CriticalLevel
+  procedureNotes     String?
+  warning            String?
+  fluidSpecification String?
+  fluidQuantityL     Float?
+  torqueMinNm        Float?
+  torqueMaxNm        Float?
+  partReference      String?
+  engine             EngineTemplate           @relation(fields: [engineId], references: [id], onDelete: Cascade)
+  packageItems       MaintenancePackageItem[]
+  history            MaintenanceHistory[]
+  @@unique([engineId, code])
+}
+
+model MaintenancePackageTemplate {
+  id            String                   @id @default(uuid()) @db.Uuid
+  engineId      String                   @db.Uuid
+  code          String
+  name          String
+  triggerKm     Int?
+  triggerMonths Int?
+  engine        EngineTemplate           @relation(fields: [engineId], references: [id], onDelete: Cascade)
+  items         MaintenancePackageItem[]
+  @@unique([engineId, code])
+}
+
+model MaintenancePackageItem {
+  id          String                      @id @default(uuid()) @db.Uuid
+  packageId   String                      @db.Uuid
+  ruleId      String?                     @db.Uuid
+  description String
+  type        ChecklistType
+  mandatory   Boolean                     @default(true)
+  sortOrder   Int                         @default(0)
+  package     MaintenancePackageTemplate  @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  rule        MaintenanceRuleTemplate?    @relation(fields: [ruleId], references: [id], onDelete: SetNull)
+}
+
+model Vehicle {
+  id                     String               @id @default(uuid()) @db.Uuid
+  ownerId                String               @db.Uuid
+  engineId               String               @db.Uuid
+  vin                    String?              @unique
+  registrationDate       DateTime
+  currentOdometerKm      Int                  @default(0)
+  nextItvDate            DateTime?
+  timingChainReplaced    Boolean              @default(false)
+  timingChainReplacedKm  Int?
+  owner                  User                 @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  engine                 EngineTemplate       @relation(fields: [engineId], references: [id])
+  history                MaintenanceHistory[]
+  diagnostics            DiagnosticRecord[]
+  costs                  MaintenanceCost[]
+  createdAt              DateTime             @default(now())
+  updatedAt              DateTime             @updatedAt
+}
+
+model MaintenanceHistory {
+  id          String                  @id @default(uuid()) @db.Uuid
+  vehicleId   String                  @db.Uuid
+  ruleId      String                  @db.Uuid
+  performedAt DateTime                @default(now())
+  odometerKm  Int
+  cost        Decimal?                @db.Decimal(10, 2)
+  notes       String?
+  vehicle     Vehicle                 @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  rule        MaintenanceRuleTemplate @relation(fields: [ruleId], references: [id])
+  @@index([vehicleId, performedAt])
+  @@index([vehicleId, ruleId])
+}
+
+model DiagnosticRecord {
+  id         String   @id @default(uuid()) @db.Uuid
+  vehicleId  String   @db.Uuid
+  type       String
+  data       Json
+  odometerKm Int?
+  createdAt  DateTime @default(now())
+  vehicle    Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  @@index([vehicleId, createdAt])
+}
+
+model MaintenanceCost {
+  id          String   @id @default(uuid()) @db.Uuid
+  vehicleId   String   @db.Uuid
+  description String
+  parts       Decimal? @db.Decimal(10, 2)
+  labor       Decimal? @db.Decimal(10, 2)
+  total       Decimal? @db.Decimal(10, 2)
+  date        DateTime @default(now())
+  vehicle     Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  @@index([vehicleId, date])
+}

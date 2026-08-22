@@ -1,0 +1,10 @@
+* { box-sizing: border-box; }
+html, body { margin: 0; min-height: 100%; }
+body { font-family: Arial, Helvetica, sans-serif; background: #f4f6f8; color: #16191d; }
+.shell { min-height: 100vh; display: grid; place-items: center; padding: 24px; }
+.card { width: min(760px, 100%); background: #fff; border: 1px solid #e3e7eb; border-radius: 24px; padding: clamp(28px, 6vw, 64px); box-shadow: 0 20px 60px rgba(0,0,0,.08); }
+.eyebrow { font-size: .78rem; font-weight: 800; letter-spacing: .18em; color: #5b6670; }
+h1 { margin: 12px 0 16px; font-size: clamp(2.2rem, 7vw, 4.8rem); line-height: .98; letter-spacing: -.045em; }
+.lead { max-width: 56ch; color: #56616b; font-size: 1.1rem; line-height: 1.65; }
+.status { margin-top: 28px; display: inline-flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 999px; background: #eef7f0; color: #245b31; font-weight: 700; }
+.dot { width: 9px; height: 9px; border-radius: 50%; background: currentColor; }

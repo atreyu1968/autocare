@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Backend dependencies
+        working-directory: backend
+        run: npm install --no-audit --no-fund
+
+      - name: Prisma validate
+        working-directory: backend
+        env:
+          DATABASE_URL: postgresql://autocare:autocare@localhost:5432/autocare
+        run: npx prisma validate
+
+      - name: Backend build
+        working-directory: backend
+        run: npm run build
+
+      - name: Frontend dependencies
+        working-directory: frontend
+        run: npm install --no-audit --no-fund
+
+      - name: Frontend build
+        working-directory: frontend
+        run: npm run build
+
+      - name: Validate Docker Compose
+        run: cp .env.example .env && docker compose config >/dev/null
