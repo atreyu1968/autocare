@@ -10,3 +10,15 @@ export interface HealthSnapshot {
   status: HealthStatus;
   generatedAt: Date;
 }
+
+export interface VehicleHealthScore {
+  vehicleId: string;
+  score: number;
+  factors: {
+    maintenance: number;
+    obd: number;
+    battery: number;
+    documents: number;
+  };
+  updatedAt: string;
+}
