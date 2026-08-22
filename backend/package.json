@@ -19,7 +19,9 @@
     "express": "^5.1.0",
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.2",
+    "prisma": "^6.14.0",
     "redis": "^5.8.1",
+    "tsx": "^4.20.5",
     "zod": "^4.1.5"
   },
   "devDependencies": {
@@ -27,8 +29,6 @@
     "@types/express": "^5.0.3",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^24.3.0",
-    "prisma": "^6.14.0",
-    "tsx": "^4.20.5",
     "typescript": "^5.9.2"
   }
 }
