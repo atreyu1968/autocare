@@ -9,9 +9,11 @@ export enum VehicleDocumentType {
 }
 
 export interface VehicleDocumentMetadata {
+  id: string;
   vehicleId: string;
   type: VehicleDocumentType;
   filename: string;
   mimeType: string;
   storagePath: string;
+  createdAt: Date;
 }
